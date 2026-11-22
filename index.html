@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <style>
 /* Layout concept: a microscope bench. Dark = fluorescence (DAPI blue, FITC green, TRITC magenta on black).
-   Light = brightfield (hematoxylin and eosin stains on pale slide). One page per hash route, sticky header with stain-coded nav. */
+   Light = brightfield (hematoxylin and eosin stains on pale slide). One continuous page of sections; the stain-coded sidebar follows the scroll and jumps to any section. */
 :root{
   --bg:#05070e; --panel:#0b111d; --panel-2:#111a2c; --line:#1d2740; --fg:#e9eef8; --dim:#a3afc9; --faint:#6c7893;
   --dapi:#7ea3ff; --fitc:#46e3a1; --tritc:#ff6aa6; --is-dark:1;
@@ -121,9 +121,15 @@ nav a[aria-current="page"]::before{content:"";position:absolute;left:0;top:.28re
 }
 
 /* Views */
-.view{padding-block:3rem 1rem}
+.view{padding-block:3rem 1rem;scroll-margin-top:0}
 .view[hidden]{display:none}
 .view:focus{outline:none}
+/* All sections sit on one continuous page; each keeps its own stain colour */
+.view[data-ch="dapi"]{--page:var(--dapi)}
+.view[data-ch="fitc"]{--page:var(--fitc)}
+.view[data-ch="tritc"]{--page:var(--tritc)}
+.view + .view{margin-top:3rem;padding-top:4.5rem;border-top:1px solid var(--line)}
+@media (max-width:899px){html{scroll-padding-top:calc(56px + env(safe-area-inset-top,0px))}.view + .view{margin-top:2rem;padding-top:3.5rem}}
 .view-head{display:grid;gap:.9rem;margin-bottom:2.5rem;max-width:46rem}
 .view-head .mono{color:var(--page)}
 .view-head h2{font-size:clamp(2.1rem,5vw,3.4rem)}
@@ -451,7 +457,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   </section>
 
   <!-- EDUCATION -->
-  <section class="view" id="view-education" data-route="education" data-ch="dapi" tabindex="-1" hidden>
+  <section class="view" id="view-education" data-route="education" data-ch="dapi" tabindex="-1">
     <div class="view-head">
       <p class="mono">Education</p>
       <h2>Cambridge and South Florida</h2>
@@ -492,7 +498,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   </section>
 
   <!-- RESEARCH -->
-  <section class="view" id="view-research" data-route="research" data-ch="fitc" tabindex="-1" hidden>
+  <section class="view" id="view-research" data-route="research" data-ch="fitc" tabindex="-1">
     <div class="view-head">
       <p class="mono">Research experience</p>
       <h2>From the bench to the evidence</h2>
@@ -540,7 +546,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   </section>
 
   <!-- POSTERS -->
-  <section class="view" id="view-posters" data-route="posters" data-ch="tritc" tabindex="-1" hidden>
+  <section class="view" id="view-posters" data-route="posters" data-ch="tritc" tabindex="-1">
     <div class="view-head">
       <p class="mono">Posters &amp; presentations</p>
       <h2>Five posters, 2024 to 2026</h2>
@@ -606,7 +612,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   </section>
 
   <!-- PUBLICATIONS -->
-  <section class="view" id="view-publications" data-route="publications" data-ch="dapi" tabindex="-1" hidden>
+  <section class="view" id="view-publications" data-route="publications" data-ch="dapi" tabindex="-1">
     <div class="view-head">
       <p class="mono">Upcoming publications</p>
       <h2>Two papers on the way</h2>
@@ -643,7 +649,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   </section>
 
   <!-- WORK & LEADERSHIP -->
-  <section class="view" id="view-work" data-route="work" data-ch="fitc" tabindex="-1" hidden>
+  <section class="view" id="view-work" data-route="work" data-ch="fitc" tabindex="-1">
     <div class="view-head">
       <p class="mono">Work, leadership &amp; volunteering</p>
       <h2>Building, organising, showing up</h2>
@@ -764,7 +770,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   </section>
 
   <!-- SKILLS -->
-  <section class="view" id="view-skills" data-route="skills" data-ch="tritc" tabindex="-1" hidden>
+  <section class="view" id="view-skills" data-route="skills" data-ch="tritc" tabindex="-1">
     <div class="view-head">
       <p class="mono">Skills &amp; certifications</p>
       <h2>Methods I can run</h2>
@@ -806,7 +812,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   </section>
 
   <!-- CONTACT -->
-  <section class="view" id="view-contact" data-route="contact" data-ch="dapi" tabindex="-1" hidden>
+  <section class="view" id="view-contact" data-route="contact" data-ch="dapi" tabindex="-1">
     <div class="view-head">
       <p class="mono">Contact</p>
       <h2>Let's talk science</h2>
@@ -857,25 +863,84 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
   routes.forEach(function(r){views[r]=document.getElementById('view-'+r)});
   var chColor={dapi:'var(--dapi)',fitc:'var(--fitc)',tritc:'var(--tritc)'};
 
-  function route(){
-    var h=(location.hash||'').replace('#','');
-    if(routes.indexOf(h)<0) h='home';
-    var chan=null;
-    routes.forEach(function(r){
-      var v=views[r], on=r===h;
-      v.hidden=!on;
-      if(on){var ch=v.getAttribute('data-ch'); chan=ch; root.style.setProperty('--page', chColor[ch]||'var(--fitc)');}
-    });
+  var side=document.getElementById('sidebar');
+  var active=null, lock=0, lockTimer=0;
+
+  /* Mark a section as current: sidebar highlight, page colour, URL hash and the 3D scene. */
+  function setActive(h,writeHash){
+    if(h===active) return;
+    active=h;
+    var v=views[h], chan=v.getAttribute('data-ch');
+    root.style.setProperty('--page', chColor[chan]||'var(--fitc)');
     links.forEach(function(a){
       if(a.getAttribute('data-route')===h) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
     });
     var cur=document.querySelector('nav a[aria-current="page"]');
-    if(cur && cur.scrollIntoView){try{cur.scrollIntoView({inline:'center',block:'nearest'})}catch(e){}}
-    window.scrollTo(0,0);
-    if(h==='home' && window.__field) window.__field.resize();
+    if(cur&&side){ // keep the highlighted link visible without disturbing the page scroll
+      var sr=side.getBoundingClientRect(), cr=cur.getBoundingClientRect();
+      if(cr.top<sr.top+60) side.scrollTop-=sr.top+60-cr.top;
+      else if(cr.bottom>sr.bottom-60) side.scrollTop+=cr.bottom-(sr.bottom-60);
+    }
+    if(writeHash&&history.replaceState){
+      try{history.replaceState(null,'',h==='home'?location.pathname+location.search:'#'+h)}catch(e){}
+    }
     try{document.dispatchEvent(new CustomEvent('am:route',{detail:{route:h,channel:chan}}))}catch(e){}
   }
-  window.addEventListener('hashchange',route);
+
+  /* Scroll spy: the current section is the last one whose top has crossed a line a third of the way down. */
+  function spy(){
+    if(lock) return;
+    var probe=window.innerHeight*0.34, pick=routes[0];
+    for(var i=0;i<routes.length;i++){
+      if(views[routes[i]].getBoundingClientRect().top<=probe) pick=routes[i]; else break;
+    }
+    var de=document.documentElement;
+    if(window.scrollY+window.innerHeight>=de.scrollHeight-4) pick=routes[routes.length-1];
+    setActive(pick,true);
+  }
+  var spyQueued=false;
+  window.addEventListener('scroll',function(){
+    if(lock){ clearTimeout(lockTimer); lockTimer=setTimeout(release,140); }
+    if(spyQueued) return; spyQueued=true;
+    requestAnimationFrame(function(){spyQueued=false; spy();});
+  },{passive:true});
+  window.addEventListener('resize',function(){spy()});
+  function release(){ lock=0; spy(); }
+
+  /* Jump to a section: highlight it straight away and hold that while the smooth scroll runs. */
+  function goTo(h,smooth,noPush){
+    if(routes.indexOf(h)<0) return false;
+    setActive(h,false);
+    var want=h==='home'?'':'#'+h;
+    if(!noPush&&history.pushState&&location.hash!==want){try{history.pushState(null,'',want||location.pathname+location.search)}catch(e){}}
+    lock=1; clearTimeout(lockTimer); lockTimer=setTimeout(release,smooth?900:60);
+    var v=views[h];
+    if(h==='home') window.scrollTo(smooth?{top:0}:{top:0,behavior:'instant'});
+    else { try{v.scrollIntoView(smooth?{block:'start'}:{block:'start',behavior:'instant'})}catch(e){v.scrollIntoView()} }
+    try{v.focus({preventScroll:true})}catch(e){}
+    return true;
+  }
+  document.addEventListener('click',function(e){
+    if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return;
+    var a=e.target.closest&&e.target.closest('a[href^="#"]'); if(!a) return;
+    var h=a.getAttribute('href').slice(1);
+    if(routes.indexOf(h)<0) return;
+    e.preventDefault();
+    goTo(h,true);
+  });
+  window.addEventListener('popstate',function(){
+    var h=(location.hash||'').replace('#','');
+    goTo(routes.indexOf(h)<0?'home':h,true,true);
+  });
+  function route(){ // initial load: honour a deep link such as #posters
+    var h=(location.hash||'').replace('#','');
+    if(routes.indexOf(h)>-1&&h!=='home'){
+      goTo(h,false,true);
+      var moved=false, mark=function(){moved=true};
+      ['wheel','touchstart','keydown'].forEach(function(t){window.addEventListener(t,mark,{once:true,passive:true})});
+      window.addEventListener('load',function(){ if(!moved&&active===h) goTo(h,false,true); });
+    } else spy();
+  }
 
   /* Theme */
   var btn=document.getElementById('theme');
@@ -975,7 +1040,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
     }
     function tick(now){
       requestAnimationFrame(tick);
-      if(views.home.hidden||document.hidden||!W) return;
+      if(!onScreen||document.hidden||!W) return;
       var tm=now-t0;
       for(var i=0;i<cells.length;i++){
         var c=cells[i]; c.x+=c.vx; c.y+=c.vy;
@@ -983,6 +1048,8 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
       }
       draw(tm);
     }
+    var onScreen=true;
+    if('IntersectionObserver' in window) new IntersectionObserver(function(es){onScreen=es[0].isIntersecting},{threshold:0}).observe(cv);
     window.__field={resize:resize,recolor:function(){recolor(); if(reduce) draw(0)}};
     window.addEventListener('resize',function(){resize()});
     if(!reduce) requestAnimationFrame(tick);
