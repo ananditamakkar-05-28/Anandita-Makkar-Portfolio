@@ -128,9 +128,34 @@ nav a[aria-current="page"]::before{content:"";position:absolute;left:0;top:.28re
 .view[data-ch="dapi"]{--page:var(--dapi)}
 .view[data-ch="fitc"]{--page:var(--fitc)}
 .view[data-ch="tritc"]{--page:var(--tritc)}
-.view + .view{margin-top:3rem;padding-top:4.5rem;border-top:1px solid var(--line)}
-@media (max-width:899px){html{scroll-padding-top:calc(56px + env(safe-area-inset-top,0px))}.view + .view{margin-top:2rem;padding-top:3.5rem}}
+.view + .view{margin-top:2.5rem;padding-top:1rem}
+@media (max-width:899px){html{scroll-padding-top:calc(56px + env(safe-area-inset-top,0px))}.view + .view{margin-top:1.5rem;padding-top:.5rem}}
+
+/* Section dividers: a hand-drawn line of immune cells (T cell, dendritic cell, T cell) instead of a rule */
+.cells-divider{display:flex;justify-content:center;margin:0 0 3.2rem;pointer-events:none}
+.cells-divider svg{display:block;width:min(100%,680px);height:auto;aspect-ratio:640/72;overflow:visible;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 16%,#000 84%,transparent)}
+.view:nth-of-type(odd) .cells-divider svg{transform:scaleX(-1)}
+@media (max-width:899px){.cells-divider{margin-bottom:2.4rem}}
+#cell-line *{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#cell-line .cd-line{stroke:var(--faint);stroke-width:1.3;opacity:.7}
+#cell-line .cd-sig{stroke:var(--page);stroke-width:1.6;stroke-dasharray:2 14;animation:cd-flow 3.2s linear infinite}
+#cell-line .cd-dots circle{fill:var(--faint);stroke:none;opacity:.7}
+#cell-line .mem{stroke-width:1.6}
+#cell-line .nuc{stroke-width:1.1;fill-opacity:.16}
+#cell-line .villi{stroke-width:1.1}
+#cell-line .den{stroke-width:1.5}
+#cell-line .cd-t1 .mem,#cell-line .cd-t1 .villi,#cell-line .cd-t1 .nuc{stroke:var(--fitc)}
+#cell-line .cd-t1 .nuc{fill:var(--fitc)}
+#cell-line .cd-dc .mem,#cell-line .cd-dc .den,#cell-line .cd-dc .nuc{stroke:var(--tritc)}
+#cell-line .cd-dc .nuc{fill:var(--tritc)}
+#cell-line .cd-t2 .mem,#cell-line .cd-t2 .villi,#cell-line .cd-t2 .nuc{stroke:var(--dapi)}
+#cell-line .cd-t2 .nuc{fill:var(--dapi)}
+@keyframes cd-flow{to{stroke-dashoffset:-32}}
+@media (prefers-reduced-motion:reduce){#cell-line .cd-sig{animation:none}}
 .view-head{display:grid;gap:.9rem;margin-bottom:2.5rem;max-width:46rem}
+.view-head p{text-shadow:0 0 18px var(--bg),0 0 6px var(--bg)}
 .view-head .mono{color:var(--page)}
 .view-head h2{font-size:clamp(2.1rem,5vw,3.4rem)}
 .view-head p{color:var(--dim);font-size:1.05rem;max-width:40rem}
@@ -171,9 +196,11 @@ nav a[aria-current="page"]::before{content:"";position:absolute;left:0;top:.28re
 }
 
 /* Entries */
-.entries{display:grid}
-.entry{display:grid;grid-template-columns:minmax(0,12rem) minmax(0,1fr);gap:1rem 2.5rem;padding-block:1.8rem;border-top:1px solid var(--line)}
-.entry:last-child{border-bottom:1px solid var(--line)}
+/* Entry cards: the same solid panel as the poster cards, so long text never sits on the moving field */
+.entries{display:grid;gap:1.2rem}
+.entry{display:grid;grid-template-columns:minmax(0,12rem) minmax(0,1fr);gap:1rem 2.5rem;
+  padding:clamp(1.2rem,3vw,1.9rem) clamp(1.1rem,3vw,2rem);background:var(--panel);border:1px solid var(--line);border-radius:12px}
+:root.gl .entry{box-shadow:0 18px 50px -28px rgba(0,0,0,.75)}
 .when{font-family:var(--font-mono);font-size:.8rem;color:var(--page);line-height:1.5;padding-top:.3rem}
 .when small{display:block;color:var(--faint);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-top:.25rem}
 .entry h3{font-size:1.4rem}
@@ -182,7 +209,7 @@ nav a[aria-current="page"]::before{content:"";position:absolute;left:0;top:.28re
 .entry ul li::marker{color:var(--page)}
 .entry .links{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;margin-top:1rem;font-size:.9rem}
 .entry .links a{color:var(--page);text-underline-offset:3px}
-.sub{margin-top:1.1rem;padding:1rem 1.1rem;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:grid;gap:.3rem}
+.sub{margin-top:1.1rem;padding:1rem 1.1rem;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;display:grid;gap:.3rem}
 .sub h4{margin:0;font-family:var(--font-display);font-size:1.05rem}
 .sub p{color:var(--dim);font-size:.95rem}
 .group-title{margin:3rem 0 1rem;display:flex;align-items:baseline;gap:1rem}
@@ -408,6 +435,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 </aside>
 
 <main class="wrap">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="cell-line" viewBox="0 0 640 72"><path class="cd-line" d="M0 36Q20 32 40 36T80 36T120 36T150 37M190 36Q210 40 230 36T270 36T300 37M340 37Q362 33 384 37T428 36T452 36M490 36Q510 40 530 36T570 36T610 36T640 36"/><path class="cd-sig" d="M190 36Q210 40 230 36T270 36T300 37M340 37Q362 33 384 37T428 36T452 36"/><g class="cd-dots"><circle cx="62" cy="31" r="1.6"/><circle cx="96" cy="41" r="1.2"/><circle cx="488" cy="22" r="1.4"/><circle cx="497" cy="16" r="1.1"/><circle cx="494" cy="52" r="1.3"/><circle cx="580" cy="42" r="1.5"/><circle cx="612" cy="31" r="1.1"/></g><g class="cd-t1"><circle class="mem" cx="170" cy="36" r="14"/><circle class="nuc" cx="171.2" cy="35.2" r="9"/><path class="villi" d="M184.5 37.5L187.5 37.8M182.5 43.6L184.2 44.7M177.9 48.3L179.5 50.8M171.8 50.5L172.1 52.5M165.3 49.8L164.4 52.7M159.8 46.4L158.4 47.9M156.3 41L153.5 42M155.5 34.5L153.5 34.3M157.5 28.4L155 26.8M162.1 23.7L161 22.1M168.2 21.5L167.8 18.5M174.7 22.2L175.3 20.3M180.2 25.6L182.3 23.4M183.7 31L185.6 30.3"/></g><g class="cd-dc"><path class="mem" d="M306 34C304 26 312 22 318 23C325 21 334 25 334 33C336 41 330 49 321 48C313 50 305 44 306 34Z"/><path class="nuc" d="M314 32C314 28 320 27 323 30C326 32 327 37 323 39C320 41 318 38 316 39C313 39 313 35 314 32Z"/><path class="den" d="M309 27C304 20 299 16 290 12M299 16C297 11 298 8 300 4M319 23C318 16 321 11 319 5M327 24C331 16 337 12 346 10M337 12C340 8 344 6 347 3M334 31C342 28 350 31 358 27M333 40C341 42 346 47 354 47M346 46C349 51 352 53 357 55M327 47C331 54 337 59 345 62M314 48C312 55 308 60 303 66M307 41C300 45 294 44 286 48M294 44C291 40 287 39 283 39"/></g><g class="cd-t2"><circle class="mem" cx="470" cy="36" r="13"/><circle class="nuc" cx="471.2" cy="35.2" r="8.3"/><path class="villi" d="M483 40L485.9 40.9M480 45.3L481.4 46.6M475 48.7L476.1 51.5M469 49.6L468.8 51.6M463.2 47.8L461.7 50.4M458.8 43.7L457.1 44.8M456.6 38L453.6 38.5M457 32L455.1 31.4M460 26.7L457.8 24.7M465 23.3L464.3 21.5M471 22.4L471.3 19.4M476.8 24.2L477.8 22.5M481.2 28.3L483.7 26.7M483.4 34L485.4 33.7"/></g></symbol></defs></svg>
 
   <!-- HOME -->
   <section class="view" id="view-home" data-route="home" tabindex="-1">
@@ -458,6 +486,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 
   <!-- EDUCATION -->
   <section class="view" id="view-education" data-route="education" data-ch="dapi" tabindex="-1">
+    <div class="cells-divider" aria-hidden="true"><svg viewBox="0 0 640 72" focusable="false"><use href="#cell-line"/></svg></div>
     <div class="view-head">
       <p class="mono">Education</p>
       <h2>Cambridge and South Florida</h2>
@@ -499,6 +528,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 
   <!-- RESEARCH -->
   <section class="view" id="view-research" data-route="research" data-ch="fitc" tabindex="-1">
+    <div class="cells-divider" aria-hidden="true"><svg viewBox="0 0 640 72" focusable="false"><use href="#cell-line"/></svg></div>
     <div class="view-head">
       <p class="mono">Research experience</p>
       <h2>From the bench to the evidence</h2>
@@ -547,6 +577,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 
   <!-- POSTERS -->
   <section class="view" id="view-posters" data-route="posters" data-ch="tritc" tabindex="-1">
+    <div class="cells-divider" aria-hidden="true"><svg viewBox="0 0 640 72" focusable="false"><use href="#cell-line"/></svg></div>
     <div class="view-head">
       <p class="mono">Posters &amp; presentations</p>
       <h2>Five posters, 2024 to 2026</h2>
@@ -613,6 +644,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 
   <!-- PUBLICATIONS -->
   <section class="view" id="view-publications" data-route="publications" data-ch="dapi" tabindex="-1">
+    <div class="cells-divider" aria-hidden="true"><svg viewBox="0 0 640 72" focusable="false"><use href="#cell-line"/></svg></div>
     <div class="view-head">
       <p class="mono">Upcoming publications</p>
       <h2>Two papers on the way</h2>
@@ -650,6 +682,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 
   <!-- WORK & LEADERSHIP -->
   <section class="view" id="view-work" data-route="work" data-ch="fitc" tabindex="-1">
+    <div class="cells-divider" aria-hidden="true"><svg viewBox="0 0 640 72" focusable="false"><use href="#cell-line"/></svg></div>
     <div class="view-head">
       <p class="mono">Work, leadership &amp; volunteering</p>
       <h2>Building, organising, showing up</h2>
@@ -771,6 +804,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 
   <!-- SKILLS -->
   <section class="view" id="view-skills" data-route="skills" data-ch="tritc" tabindex="-1">
+    <div class="cells-divider" aria-hidden="true"><svg viewBox="0 0 640 72" focusable="false"><use href="#cell-line"/></svg></div>
     <div class="view-head">
       <p class="mono">Skills &amp; certifications</p>
       <h2>Methods I can run</h2>
@@ -813,6 +847,7 @@ if(window.__hasWebGL) document.documentElement.classList.add('gl');
 
   <!-- CONTACT -->
   <section class="view" id="view-contact" data-route="contact" data-ch="dapi" tabindex="-1">
+    <div class="cells-divider" aria-hidden="true"><svg viewBox="0 0 640 72" focusable="false"><use href="#cell-line"/></svg></div>
     <div class="view-head">
       <p class="mono">Contact</p>
       <h2>Let's talk science</h2>
