@@ -9,7 +9,8 @@
  *     Dark theme: additive blending + UnrealBloom, glowing on near-black.
  *     Light theme: the darker light-mode channel colours laid over the pale
  *     page with normal blending and no bloom — a stained brightfield slide.
- *   · Route changes lerp the three channel weights.
+ *   · Route changes lerp the three channel weights and thin the field
+ *     out behind text-heavy sections.
  *
  * No text is ever drawn in WebGL. The disc frame, tick ring, scale bar and
  * channel labels are the original HTML, sitting on top.
@@ -107,6 +108,7 @@ function layer(count, fill, opts) {
       uEdge:    { value: opts.edge },
       uWobble:  { value: opts.wobble },
       uGrow:    { value: opts.grow },
+      uDensity: { value: 1.1 },
     },
     vertexShader: `
       attribute vec3 aPos;
@@ -130,7 +132,7 @@ function layer(count, fill, opts) {
       }`,
     fragmentShader: `
       uniform vec3 uColor;
-      uniform float uWeight, uOpacity, uCore, uEdge, uWobble, uTime;
+      uniform float uWeight, uOpacity, uCore, uEdge, uWobble, uTime, uDensity;
       varying vec2 vUv;
       varying float vCoc, vSeed;
       void main(){
@@ -147,6 +149,8 @@ function layer(count, fill, opts) {
         float i = 1.0 - smoothstep(1.0 - soft, 1.0, r);
         i = pow(max(i, 0.0), uCore);
         i *= uOpacity * uWeight * (1.0 - vCoc * 0.55);
+        // Thin the field: cells whose seed is above the density cut fade out.
+        i *= 1.0 - smoothstep(uDensity - 0.08, uDensity, vSeed);
         if (i <= 0.003) discard;
         gl_FragColor = vec4(uColor, i);
       }`,
@@ -189,7 +193,7 @@ const tritc = layer(PUNCTA, (p, v, s, sd) => {
     const a = Math.random() * 6.2831, d = Math.sqrt(Math.random()) * rad;
     p.set([c[0] + Math.cos(a) * d, c[1] + Math.sin(a) * d, c[2] + rnd(-0.2, 0.2)], i * 3);
     v.set(cell.vel[k], i * 3);
-    s[i] = rnd(0.05, 0.11); sd[i] = Math.random();
+    s[i] = rnd(0.05, 0.11); sd[i] = cell.seed[k];   // puncta thin out with their cell
   }
 }, { coc: 0.055, opacity: 0.95, core: 1.1, edge: 0.85, wobble: 0, grow: 2.4, order: 2 });
 
@@ -233,6 +237,12 @@ function applyTheme() {
 const target = { dapi: 1, fitc: 1, tritc: 1 };
 const current = { dapi: 1, fitc: 1, tritc: 1 };
 
+/* Text-heavy sections get a much sparser field so the copy stays readable;
+   the hero keeps the full field and the poster wall sits in between. */
+const DENSITY = { home: 1.1, posters: 0.6 };
+const DENSITY_TEXT = 0.3;
+let densityTarget = 1.1, densityNow = 1.1;
+
 function setRoute(route, channel) {
   if (route === 'home' || !channel) {
     target.dapi = 0.95; target.fitc = 0.95; target.tritc = 0.95;
@@ -240,8 +250,9 @@ function setRoute(route, channel) {
     CH.forEach(k => { target[k] = k === channel ? 1.0 : 0.22; });
   }
   onHome = route === 'home';
+  densityTarget = route in DENSITY ? DENSITY[route] : DENSITY_TEXT;
   placeHole();
-  if (reduce) { CH.forEach(k => current[k] = target[k]); draw(); }
+  if (reduce) { CH.forEach(k => current[k] = target[k]); densityNow = densityTarget; draw(); }
 }
 
 /* ---- the scrim hole over the hero disc ----------------------------------- */
@@ -342,7 +353,7 @@ const clock = new THREE.Clock();
 let t = 0, running = false, raf = 0, last = 0;
 
 function draw() {
-  mats.forEach(m => { m.uniforms.uTime.value = t; m.uniforms.uFocus.value = focusNow; });
+  mats.forEach(m => { m.uniforms.uTime.value = t; m.uniforms.uFocus.value = focusNow; m.uniforms.uDensity.value = densityNow; });
   fitc.material.uniforms.uWeight.value = current.fitc;
   dapi.material.uniforms.uWeight.value = current.dapi;
   tritc.material.uniforms.uWeight.value = current.tritc;
@@ -370,6 +381,7 @@ function frame(now) {
 
   focusNow += (focusTarget - focusNow) * 0.06;
   CH.forEach(k => { current[k] += (target[k] - current[k]) * 0.05; });
+  densityNow += (densityTarget - densityNow) * 0.04;
 
   draw();
 }
@@ -391,6 +403,7 @@ applyTheme();
 const open = document.querySelector('.view:not([hidden])');
 setRoute(open ? open.getAttribute('data-route') : 'home', open ? open.getAttribute('data-ch') : null);
 CH.forEach(k => { current[k] = target[k]; });
+densityNow = densityTarget;
 resize();
 readScroll();
 focusNow = focusTarget;
